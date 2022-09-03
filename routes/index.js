@@ -27,6 +27,7 @@ router.post('/contacts', function(req, res, next) {
 
   try {
     let data = req.body;
+    console.log("incoming request", data);
     if(!data.id || !data.name|| !data.token){
       return res.json({success: false, message: "Please provide all required fields!"});
     }
