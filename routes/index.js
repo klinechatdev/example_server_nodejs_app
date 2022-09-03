@@ -12,8 +12,19 @@ router.get('/', function(req, res, next) {
 /* GET contacts list. */
 router.get('/contacts', function(req, res, next) {
   try {
+    let device_id = req.query.device_id;
+
     let rawdata = fs.readFileSync('database/contacts.json');
     let contacts = JSON.parse(rawdata);
+
+    if(device_id){
+       contacts.map((d,i)=>{
+        if(d.id==device_id){
+          delete contacts[i];
+        }
+       })
+    }
+
     res.json({success: true, message: "Retrieved successfully!", data: contacts});
   } catch (error) {
     res.json({success: false, message: "Retrieved error!", data: []});
