@@ -5,9 +5,7 @@ var { AccessToken, RoomServiceClient, Room } = require('livekit-server-sdk');
 var admin = require('firebase-admin');
 var serviceAccount = require(path.join(__dirname, "../serviceAccountKey.json"));
 
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-});   
+
     
 
 
@@ -139,7 +137,9 @@ router.post('/send_fcm_noti', async function(req, res, next) {
         }
 
 
-      
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });   
 
         let message = {
            

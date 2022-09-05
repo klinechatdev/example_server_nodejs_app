@@ -1,6 +1,15 @@
 var express = require('express');
 var router = express.Router();
 var fs = require('fs');
+var path = require('path');
+var { AccessToken, RoomServiceClient, Room } = require('livekit-server-sdk');
+var admin = require('firebase-admin');
+var serviceAccount = require(path.join(__dirname, "../serviceAccountKey.json"));
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});   
+    
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -90,6 +99,71 @@ router.delete('/contacts', function(req, res, next) {
     console.log(error);
     res.json({success: false, message: "Contact deletion error!"});
   }
+
+});
+
+
+/* POST call_contact . */
+router.post('/call_contact', function(req, res, next) {
+
+  try {
+        
+    const contact_id = req.body.contact_id;
+    const caller_id = req.body.caller_id;
+
+    if(!contact_id || !caller_id){
+        return res.status(400).json({success: false, message: "You must provide  contact_id and caller_id !"});
+    }
+
+
+    let room_token = "test token";
+
+    let rawdata = fs.readFileSync('database/contacts.json');
+    let contacts = JSON.parse(rawdata);
+    let targetIndex = contacts.findIndex((c,j)=>c.id==contact_id);
+    let contact = targetIndex>-1 ? contacts[targetIndex] : null;
+    if(!contact){
+      return res.status(400).json({success: false, message: "Cannot find contact that you are calling!"});
+    }
+
+    console.log("calling to",contact);
+    //need to create room token here first 
+
+
+    let message = {
+        data: {
+            room_token : room_token
+        },
+        token: contact.token,
+    };
+    console.log("sending...");
+    admin.messaging().send(message)
+        .then((resp)=>{
+            console.log(resp);
+            return res.json({
+                success : true,
+                result: resp,
+                message: "Successfully sent call notification."
+              });
+        })
+        .catch((err)=>{
+
+            return res.status(500).json({
+                success : false,
+                message: "Something went wrong sending call notification",
+                error: err
+              });
+        });
+
+
+} catch (error) {
+    
+    return res.status(500).json({
+        success : false,
+        message: "Something went wrong sending call notification!",
+        error: error
+    });
+}
 
 });
 
