@@ -4,6 +4,7 @@ var fs = require('fs');
 var path = require('path');
 var { AccessToken, RoomServiceClient, Room } = require('livekit-server-sdk');
 var admin = require('firebase-admin');
+const { createRoomToken } = require('../services/roomService');
 var serviceAccount = require(path.join(__dirname, "../serviceAccountKey.json"));
 
 admin.initializeApp({
@@ -104,7 +105,7 @@ router.delete('/contacts', function(req, res, next) {
 
 
 /* POST call_contact . */
-router.post('/call_contact', function(req, res, next) {
+router.post('/call_contact', async function(req, res, next) {
 
   try {
         
@@ -116,7 +117,6 @@ router.post('/call_contact', function(req, res, next) {
     }
 
 
-    let room_token = "test token";
 
     let rawdata = fs.readFileSync('database/contacts.json');
     let contacts = JSON.parse(rawdata);
@@ -125,14 +125,28 @@ router.post('/call_contact', function(req, res, next) {
     if(!contact){
       return res.status(400).json({success: false, message: "Cannot find contact that you are calling!"});
     }
-
-    console.log("calling to",contact);
+    let callerIndex = contacts.findIndex((c,k)=>c.id==caller_id);
+    let caller = callerIndex>-1 ? contacts[callerIndex] : null;
+    if(!caller){
+      return res.status(400).json({success: false, message: "Cannot find caller in the database!"});
+    }
+    console.log(" calling from ", caller);
+    console.log(" to", contact);
     //need to create room token here first 
+    let room_token_contact = await createRoomToken(caller.id, contact.id);
+    if(!room_token_contact){
+      return res.status(500).json({success: false, message: "Something went wrong creating room token for contact"});
+    }
 
+    let room_token_caller = await createRoomToken(caller.id, caller.id);
+    if(!room_token_caller){
+      return res.status(500).json({success: false, message: "Something went wrong creating room token for caller"});
+    }
 
     let message = {
         data: {
-            room_token : room_token
+            room_token : room_token_contact,
+            caller_name: caller.name
         },
         token: contact.token,
     };
@@ -143,6 +157,7 @@ router.post('/call_contact', function(req, res, next) {
             return res.json({
                 success : true,
                 result: resp,
+                room_token: room_token_caller,
                 message: "Successfully sent call notification."
               });
         })
