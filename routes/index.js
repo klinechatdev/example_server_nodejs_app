@@ -118,7 +118,6 @@ router.post('/call_contact', async function(req, res, next) {
     }
 
 
-
     let rawdata = fs.readFileSync('database/contacts.json');
     let contacts = JSON.parse(rawdata);
     let targetIndex = contacts.findIndex((c,j)=>c.id==contact_id);
@@ -165,7 +164,7 @@ router.post('/call_contact', async function(req, res, next) {
               });
         })
         .catch((err)=>{
-
+           console.log(err);
             return res.status(500).json({
                 success : false,
                 message: "Something went wrong sending call notification",
@@ -187,7 +186,7 @@ router.post('/call_contact', async function(req, res, next) {
 
 
 } catch (error) {
-    
+    console.log(error);
     return res.status(500).json({
         success : false,
         message: "Something went wrong sending call notification!",
