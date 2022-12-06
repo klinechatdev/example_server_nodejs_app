@@ -111,6 +111,7 @@ router.post('/call_contact', async function(req, res, next) {
         
     const contact_id = req.body.contact_id;
     const caller_id = req.body.caller_id;
+    const no_push = req.body.no_push ? req.body.no_push : "no";
 
     if(!contact_id || !caller_id){
         return res.status(400).json({success: false, message: "You must provide  contact_id and caller_id !"});
@@ -143,6 +144,7 @@ router.post('/call_contact', async function(req, res, next) {
       return res.status(500).json({success: false, message: "Something went wrong creating room token for caller"});
     }
 
+    if(no_push=="no"){
     let message = {
         data: {
             room_token : room_token_contact,
@@ -170,6 +172,18 @@ router.post('/call_contact', async function(req, res, next) {
                 error: err
               });
         });
+
+      }else{
+
+        return res.json({
+          success : true,
+          result: resp,
+          room_token: room_token_caller,
+          their_room_token: room_token_contact,
+          message: "Successfully sent call notification."
+        });
+
+      }
 
 
 } catch (error) {
