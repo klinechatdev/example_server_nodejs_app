@@ -158,6 +158,7 @@ router.post('/call_contact', async function(req, res, next) {
                 success : true,
                 result: resp,
                 room_token: room_token_caller,
+                their_room_token: room_token_contact,
                 message: "Successfully sent call notification."
               });
         })
